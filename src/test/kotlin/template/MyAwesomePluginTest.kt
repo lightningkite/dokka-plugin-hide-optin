@@ -1,4 +1,4 @@
-package template
+package com.lightningkite.dokka.hideoptin
 
 import org.jetbrains.dokka.base.testApi.testRunner.BaseAbstractTest
 import kotlin.test.Test

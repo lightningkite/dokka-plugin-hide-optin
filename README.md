@@ -32,7 +32,7 @@ A minimal repository for a Dokka plugin should contain files in the following st
     └── main
         ├── kotlin
         │   └── template
-        │       └── MyAwesomeDokkaPlugin.kt
+        │       └── HideInternalApiPlugin.kt
         └── resources
             └── META-INF
                 └── services

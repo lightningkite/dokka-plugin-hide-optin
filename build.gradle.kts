@@ -1,3 +1,6 @@
+import java.net.URI
+import com.lightningkite.deployhelpers.*
+
 plugins {
     kotlin("jvm") version "2.0.21"
     id("org.jetbrains.dokka") version "2.0.0" // Used to create a javadoc jar
@@ -5,8 +8,22 @@ plugins {
     signing
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+buildscript {
+    repositories {
+        mavenLocal()
+        maven("https://lightningkite-maven.s3.us-west-2.amazonaws.com")
+    }
+    dependencies {
+        classpath("com.lightningkite:lk-gradle-helpers:3.0.7")
+    }
+}
+
+group = "com.lightningkite"
+version = "main-SNAPSHOT"
+useGitBasedVersion()
+useLocalDependencies()
+publishing()
+setupDokka("lightningkite", "dokka-plugin-hide-optin")
 
 repositories {
     mavenCentral()
@@ -40,67 +57,21 @@ java {
     withSourcesJar()
 }
 
+
 publishing {
-    publications {
-        val dokkaTemplatePlugin by creating(MavenPublication::class) {
-            artifactId = project.name
-            from(components["java"])
-            artifact(javadocJar)
-
-            pom {
-                name.set("Dokka template plugin")
-                description.set("This is a plugin template for Dokka")
-                url.set("https://github.com/Kotlin/dokka-plugin-template/")
-
-                licenses {
-                    license {
-                        name.set("The Apache Software License, Version 2.0")
-                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                        distribution.set("repo")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("JetBrains")
-                        name.set("JetBrains Team")
-                        organization.set("JetBrains")
-                        organizationUrl.set("https://www.jetbrains.com")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/Kotlin/dokka-plugin-template.git")
-                    url.set("https://github.com/Kotlin/dokka-plugin-template/tree/master")
-                }
-            }
-        }
-        signPublicationsIfKeyPresent(dokkaTemplatePlugin)
-    }
-
     repositories {
-        maven("https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-            credentials {
-                username = System.getenv("SONATYPE_USER")
-                password = System.getenv("SONATYPE_PASSWORD")
+        val lightningKiteMavenAwsAccessKey: String? = project.findProperty("lightningKiteMavenAwsAccessKey") as? String
+        val lightningKiteMavenAwsSecretAccessKey: String? = project.findProperty("lightningKiteMavenAwsSecretAccessKey") as? String
+        lightningKiteMavenAwsAccessKey?.let { ak ->
+            maven {
+                name = "LightningKite"
+                url = URI.create("s3://lightningkite-maven")
+                credentials(AwsCredentials::class) {
+                    accessKey = ak
+                    secretKey = lightningKiteMavenAwsSecretAccessKey!!
+                }
             }
         }
     }
 }
 
-fun Project.signPublicationsIfKeyPresent(publication: MavenPublication) {
-    val signingKeyId: String? = System.getenv("SIGN_KEY_ID")
-    val signingKey: String? = System.getenv("SIGN_KEY")
-    val signingKeyPassphrase: String? = System.getenv("SIGN_KEY_PASSPHRASE")
-
-    if (!signingKey.isNullOrBlank()) {
-        extensions.configure<SigningExtension>("signing") {
-            if (signingKeyId?.isNotBlank() == true) {
-                useInMemoryPgpKeys(signingKeyId, signingKey, signingKeyPassphrase)
-            } else {
-                useInMemoryPgpKeys(signingKey, signingKeyPassphrase)
-            }
-            sign(publication)
-        }
-    }
-}
