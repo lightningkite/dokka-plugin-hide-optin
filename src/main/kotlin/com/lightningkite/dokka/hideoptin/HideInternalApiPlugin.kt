@@ -17,7 +17,8 @@ class HideInternalApiPlugin : DokkaPlugin() {
 }
 
 data class AnnotationsToHide(
-    val fqns: List<String>
+    val fqns: List<String> = listOf(),
+    val names: List<String> = listOf(),
 )
 
 class HideInternalApiTransformer(context: DokkaContext) : SuppressedByConditionDocumentableFilterTransformer(context) {
@@ -37,8 +38,13 @@ class HideInternalApiTransformer(context: DokkaContext) : SuppressedByConditionD
             ?.any { isInternalAnnotation(it) }
             ?: false
     }
+
     private fun isInternalAnnotation(annotation: Annotations.Annotation): Boolean {
         return toSuppress.fqns.any { fqn -> annotation.dri.run { "$packageName.$classNames" } == fqn }
+                || toSuppress.names.any { name -> annotation.dri.classNames == name }
                 || annotation.dri.classNames == "SuppressDokka"
+                || annotation.dri.classNames?.let {
+                 it.startsWith("Internal") && it.endsWith("Api")
+        } == true
     }
 }

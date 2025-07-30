@@ -4,6 +4,7 @@ import com.lightningkite.deployhelpers.*
 plugins {
     kotlin("jvm") version "2.0.21"
     id("org.jetbrains.dokka") version "2.0.0" // Used to create a javadoc jar
+    id("com.vanniktech.maven.publish") version "0.34.0" // Used to create a javadoc jar
     `maven-publish`
     signing
 }
@@ -58,19 +59,18 @@ java {
 }
 
 
-publishing {
-    repositories {
-        val lightningKiteMavenAwsAccessKey: String? = project.findProperty("lightningKiteMavenAwsAccessKey") as? String
-        val lightningKiteMavenAwsSecretAccessKey: String? = project.findProperty("lightningKiteMavenAwsSecretAccessKey") as? String
-        lightningKiteMavenAwsAccessKey?.let { ak ->
-            maven {
-                name = "LightningKite"
-                url = URI.create("s3://lightningkite-maven")
-                credentials(AwsCredentials::class) {
-                    accessKey = ak
-                    secretKey = lightningKiteMavenAwsSecretAccessKey!!
-                }
-            }
+mavenPublishing {
+    publishToMavenCentral(automaticRelease = true)
+    signAllPublications()
+    pom {
+        name.set("KotlinX Serialization CSV Durable")
+        description.set("A format for KotlinX Serialization that handles CSV files with a header row.")
+        github("lightningkite", "kotlinx-serialization-csv-durable")
+        url.set(dokkaPublicHostingIndex)
+        licenses { mit() }
+        developers {
+            joseph()
+            brady()
         }
     }
 }
