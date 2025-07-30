@@ -3,8 +3,8 @@ import com.lightningkite.deployhelpers.*
 
 plugins {
     kotlin("jvm") version "2.0.21"
-    id("org.jetbrains.dokka") version "2.0.0" // Used to create a javadoc jar
-    id("com.vanniktech.maven.publish") version "0.34.0" // Used to create a javadoc jar
+    id("org.jetbrains.dokka") version "2.0.0"
+    id("com.vanniktech.maven.publish") version "0.34.0"
     `maven-publish`
     signing
 }
@@ -45,19 +45,9 @@ kotlin {
     jvmToolchain(8)
 }
 
-tasks.dokkaHtml {
-    outputDirectory.set(layout.buildDirectory.dir("dokka"))
+tasks.dokkaGeneratePublicationHtml {
+    dependsOn("jar")
 }
-
-val javadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-    from(tasks.dokkaHtml)
-}
-
-java {
-    withSourcesJar()
-}
-
 
 mavenPublishing {
     publishToMavenCentral(automaticRelease = true)
